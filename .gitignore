@@ -1,0 +1,10 @@
+.idea/
+.gradle/
+build/
+out/
+*.log
+*.log.*.gz
+*.tmp
+**/*.iml
+**/*.p12
+**/*.crt
