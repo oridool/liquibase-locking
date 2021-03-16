@@ -1,1 +1,1 @@
-liquibase.lockservice.ext.ext.LockServiceExt
+liquibase.lockservice.ext.LockServiceExt

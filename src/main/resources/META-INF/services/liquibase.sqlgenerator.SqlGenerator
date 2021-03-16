@@ -1,1 +1,1 @@
-liquibase.lockservice.ext.ext.LockDatabaseChangeLogGeneratorExt
+liquibase.lockservice.ext.LockDatabaseChangeLogGeneratorExt
