@@ -1,9 +1,11 @@
 package liquibase.lockservice.ext;
 
+import liquibase.Scope;
 import liquibase.database.Database;
 import liquibase.datatype.DataTypeFactory;
 import liquibase.exception.DatabaseException;
 import liquibase.executor.ExecutorService;
+import liquibase.logging.Logger;
 import liquibase.sql.Sql;
 import liquibase.sqlgenerator.SqlGeneratorChain;
 import liquibase.sqlgenerator.SqlGeneratorFactory;
@@ -11,15 +13,14 @@ import liquibase.sqlgenerator.core.LockDatabaseChangeLogGenerator;
 import liquibase.statement.core.LockDatabaseChangeLogStatement;
 import liquibase.statement.core.RawSqlStatement;
 import liquibase.statement.core.UpdateStatement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
 public class LockDatabaseChangeLogGeneratorExt extends LockDatabaseChangeLogGenerator {
-    private final static Logger LOG = LoggerFactory.getLogger(LockDatabaseChangeLogGeneratorExt.class);
+    private final static Logger LOG = Scope.getCurrentScope().getLog(LockDatabaseChangeLogGeneratorExt.class);
 
     public static final String LOCKED_BY_SEPARATOR = "@@";
 
@@ -54,17 +55,19 @@ public class LockDatabaseChangeLogGeneratorExt extends LockDatabaseChangeLogGene
         String dbPidStartTime = "";
 
         try {
-            List<Map<String, ?>> rs = ExecutorService.getInstance().getExecutor(database).queryForList(new RawSqlStatement("select * from pg_stat_activity where pid=pg_backend_pid()"));
+            List<Map<String, ?>> rs = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database).queryForList(
+                    new RawSqlStatement("select * from pg_stat_activity where pid=pg_backend_pid()"));
             if (rs.size() > 0) { // expected exactly one row
                 Map<String, ?> row = rs.get(0);
                 dbPid = Integer.toString ((Integer) row.get("PID"));
                 dbPidStartTime = ((Timestamp)(row.get("BACKEND_START"))).toString();
             }
         } catch (DatabaseException e) {
-            LOG.error("Failed to read current Liquibase locking info", e);
+            LOG.severe("Failed to read current Liquibase locking info", e);
         }
 
         String lockedByValue = dbPid + LOCKED_BY_SEPARATOR + dbPidStartTime;
+        LOG.warning("Setting LOCKEDBY value to " + lockedByValue);
         return lockedByValue;
     }
 }
