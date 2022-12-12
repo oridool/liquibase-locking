@@ -36,22 +36,22 @@ public class LockServiceExt extends StandardLockService {
             if (this.hasDatabaseChangeLogLockTable()) {
                 Boolean locked = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database).queryForObject(
                         new SelectFromDatabaseChangeLogLockStatement("LOCKED"), Boolean.class);
-                if (locked != null && locked == Boolean.TRUE) {
+                if (locked == Boolean.TRUE) {
                     try {
                         String lockedBy = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database).queryForObject(
                                 new SelectFromDatabaseChangeLogLockStatement("LOCKEDBY"), String.class);
                         if (lockedBy != null && !lockedBy.isBlank()) {
-                            LOG.warning("!!!!!  Database is locked by: " + lockedBy + " !!!!!");
+                            LOG.info("!!!!!  Database is locked by: " + lockedBy + " !!!!!");
                             StringTokenizer tok = new StringTokenizer(lockedBy, LOCKED_BY_SEPARATOR);
                             if (tok.countTokens() >= 2) {
                                 String dbPid = tok.nextToken();
                                 String dbPidStart = tok.nextToken();
                                 boolean lockHolderActive = isPidActive(dbPid, dbPidStart);
                                 if (!lockHolderActive) {
-                                    LOG.warning("Database Lock was created by an inactive client (pid=" + dbPid + " , startTime=" + dbPidStart + "). Releasing lock!");
+                                    LOG.info("Database Lock was created by an inactive client (pid=" + dbPid + " , startTime=" + dbPidStart + "). Releasing lock!");
                                     releaseLock();
                                 } else {
-                                    LOG.warning("Database Lock was created by a still active client (pid=" + dbPid + " , startTime=" + dbPidStart + "). NOT Releasing lock!");
+                                    LOG.info("Database Lock was created by a still active client (pid=" + dbPid + " , startTime=" + dbPidStart + "). NOT Releasing lock!");
                                 }
                             } else {
                                 LOG.warning("Databased is locked, cannot parse LOCKEDBY value: '" + lockedBy + "' in table " + database.getDatabaseChangeLogLockTableName());
@@ -63,7 +63,7 @@ public class LockServiceExt extends StandardLockService {
                         LOG.severe("Can't read the LOCKEDBY field from " + database.getDatabaseChangeLogLockTableName(), e);
                     }
                 } else {
-                    LOG.warning("****  Databased is not locked **** ");
+                    LOG.info("****  Database is not locked **** ");
                 }
             }
         } catch (DatabaseException e) {
