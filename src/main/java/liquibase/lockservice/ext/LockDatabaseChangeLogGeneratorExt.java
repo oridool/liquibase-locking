@@ -67,7 +67,7 @@ public class LockDatabaseChangeLogGeneratorExt extends LockDatabaseChangeLogGene
         }
 
         String lockedByValue = dbPid + LOCKED_BY_SEPARATOR + dbPidStartTime;
-        LOG.warning("Setting LOCKEDBY value to " + lockedByValue);
+        LOG.info("Setting LOCKEDBY value to " + lockedByValue);
         return lockedByValue;
     }
 }
